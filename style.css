@@ -1,0 +1,17 @@
+* {
+  padding: 10px;
+  margin: 10px;
+  font-size: 1rem;
+  background-color: #9ec6e6;
+}
+
+.textarea {
+  display: block;
+  font-size: 0.9rem;
+  width: 50em;
+  height: 40em;
+}
+
+.information {
+  display: none;
+}
