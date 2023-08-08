@@ -18,8 +18,7 @@ window.addEventListener('load', () => {
   const transform = document.getElementById('transform')
   const screenshot = document.getElementById('screenshot')
   const image = document.getElementById('image')
-  const pararScreenshotButton = document.getElementById('parar-screenshot')
-
+  const stopScreenshotButton = document.getElementById('stop-screenshot')
   
   connect.addEventListener('click', conectar)
   sceneList.addEventListener('click', getSceneList)
@@ -32,12 +31,10 @@ window.addEventListener('load', () => {
   changeScene.addEventListener('click', setChangeScene)
   transform.addEventListener('click', transformItem)
   screenshot.addEventListener('click', getScreenshot)
-  pararScreenshotButton.addEventListener('click', pararScreenshot)
-
-
+  stopScreenshotButton.addEventListener('click', stopScreenshot)
 
   async function conectar() {
-    // Connect to OBS to OBS
+    // Connect to OBS
     await obs.connect(`ws://localhost:${obsPort.value}`, `${obsPassword.value}`)
       .then(async () => {
         const version = await obs.call('GetVersion')
@@ -52,126 +49,135 @@ window.addEventListener('load', () => {
       })
   }
 
-  // Lista de cenas
+  // Get Scene list and send the output to cl1p.net
   async function getSceneList() {
     const getSceneList = await obs.call('GetSceneList');
     results.innerHTML = JSON.stringify(getSceneList.scenes, null, 2)
     console.log(`Total scenes amount: ${getSceneList.scenes.length}`)
     console.log('List of scenes:', getSceneList.scenes)
 	
-	sendToCl1p(getSceneList)
-	
-	async function sendToCl1p(data) {
-	  const information = JSON.stringify(data, null, 2)
-    
-    const cl1pFetch = await fetch('https://api.cl1p.net/clipname', { //https://cl1p.net/sys/api.jsp
-      'method': 'POST', 
-	    'mode': 'no-cors',
-        'headers': {
-          'content-type': 'text/html; charset=UTF-8',
-          'cl1papitoken': 'YOUR_CL1P_API_TOKEN'        
-        },
-        'body': information
-    })
-	console.log(cl1pFetch)
-  }
-	
-	
+	  sendToCl1p(getSceneList)
   }
 
-  // Cena atual
+  // Send the output to cl1p, which is like a notepad website, but with an API so you can send text programatically
+  // More info: https://cl1p.net/sys/api.jsp
+	async function sendToCl1p(data) {
+    const information = JSON.stringify(data, null, 2)
+        
+    const cl1pFetch = await fetch('https://api.cl1p.net/clipname', { 
+      'method': 'POST', 
+      'mode': 'no-cors',
+      'headers': {
+        'content-type': 'text/html; charset=UTF-8',
+        'cl1papitoken': 'YOUR_CL1P_API_TOKEN'        
+      },
+      'body': information
+    })
+	  console.log(cl1pFetch)
+  }  
+
+  // Get Current Scene
   async function getCurrentScene() {
     const getCurrentScene = await obs.call('GetCurrentProgramScene');
     results.innerHTML = getCurrentScene.currentProgramSceneName
     console.log('Current scene: ', getCurrentScene.currentProgramSceneName)
   }
 
-  // Fontes de uma cena
+  // Sources of a scene. Put the name of the scene into the variable 'chosenScene'. I.e.: 'Game'
   async function getSceneItems() {
-    const getSceneItems = await obs.call('GetSceneItemList', { sceneName: 'Jogo' })
+    const chosenScene = 'Game'
+    const getSceneItems = await obs.call('GetSceneItemList', { sceneName: chosenScene })
     results.innerHTML = JSON.stringify(getSceneItems.sceneItems, null, 2)
     console.log(getSceneItems.sceneItems)
   }
 
-  // Habilitar/desabilitar fonte
+  // Enable / Disable source. Put the name of the scene into the variable 'chosenScene'. I.e.: 'Just Chatting'
   async function setDisableSource() {
+    const chosenScene = 'Just Chatting'
     if (results.innerHTML === 'Item disabled') {
-      await obs.call('SetSceneItemEnabled', { sceneName: 'Just Chatting', sceneItemId: 6, sceneItemEnabled: true })
+      await obs.call('SetSceneItemEnabled', { sceneName: chosenScene, sceneItemId: 6, sceneItemEnabled: true })
       results.innerHTML = 'Item enabled'
       return
     }
-    await obs.call('SetSceneItemEnabled', { sceneName: 'Just Chatting', sceneItemId: 6, sceneItemEnabled: false })
+    await obs.call('SetSceneItemEnabled', { sceneName: chosenScene, sceneItemId: 6, sceneItemEnabled: false })
     results.innerHTML = 'Item disabled'
   }
 
+  // Get Inputs like 'Desktop Audio', 'Mic/Aux' or any other item from Audio Mixer dock
   async function getSpecialInputs() {
-	const getInputSettings = await obs.call('GetInputList', {inputName: 'Mic/Aux'})
-	results.innerHTML = JSON.stringify(getInputSettings, null, 2)
-	console.log(getInputSettings)
+    const itemName = 'Mic/Aux'
+    const getInputSettings = await obs.call('GetInputList', {inputName: itemName })
+    results.innerHTML = JSON.stringify(getInputSettings, null, 2)
+    console.log(getInputSettings)
     // const getSpecialInputs = await obs.call('GetSpecialInputs')
-	// results.innerHTML = JSON.stringify(getSpecialInputs, null, 2)
+    // results.innerHTML = JSON.stringify(getSpecialInputs, null, 2)
   }
 
 
-  // Mutar/desmutar microfone
+  // Mute / unmute microphone. Usually the mic is the item called 'Mic/Aux', but you can change it to reflect yours.
   async function setToggleMic() {
-    const isMuted = await obs.call('GetInputMute', { inputName: "Mic/Aux" })
+    const itemName = 'Mic/Aux'
+    const isMuted = await obs.call('GetInputMute', { inputName: itemName })
     if (isMuted.inputMuted) {
-      await obs.call('SetInputMute', { inputName: "Mic/Aux", inputMuted: false })
+      await obs.call('SetInputMute', { inputName: itemName, inputMuted: false })
       results.innerHTML = 'Mic unmuted'
       return
     }
-    await obs.call('SetInputMute', { inputName: "Mic/Aux", inputMuted: true })
+    await obs.call('SetInputMute', { inputName: itemName, inputMuted: true })
     results.innerHTML = 'Mic muted'
   }
 
-  // Mutar/desmutar desktop audio
+  // Mute / Unmute Desktop audio
   async function setToggleDesktopAudio() {
-    const isMuted = await obs.call('GetInputMute', { inputName: "Desktop Audio" })
+    const itemName = 'Desktop Audio'
+    const isMuted = await obs.call('GetInputMute', { inputName: itemName })
     if (isMuted.inputMuted) {
-      await obs.call('SetInputMute', { inputName: "Desktop Audio", inputMuted: false })
+      await obs.call('SetInputMute', { inputName: itemName, inputMuted: false })
       results.innerHTML = 'Audio unmuted'
       return
     }
-    await obs.call('ToggleInputMute', { inputName: "Desktop Audio", inputMuted: true })
+    await obs.call('ToggleInputMute', { inputName: itemName, inputMuted: true })
     results.innerHTML = 'Audio muted'
   }
 
-  // Trocar de cena
+  // Change to scene and show the current scene
   async function setChangeScene() {
-    await obs.call('SetCurrentProgramScene', { sceneName: "Just Chatting" })
+    const changeToScene = 'Just Chatting'
+    await obs.call('SetCurrentProgramScene', { sceneName: changeToScene })
     getCurrentScene()
   }
 
-  // Transform
+  // Transform an item (aka 'Sources' in OBS). You can change position, size or any other value related to that.
+  // You can use the function getSceneItems() to obtain the ID of the items/sources
   async function transformItem() {
-    const position = await obs.call('GetSceneItemTransform', { sceneName: "Jogo", sceneItemId: 10 })
+    const nameOfScene = 'Game'
+    const sourceId = 10
+    const position = await obs.call('GetSceneItemTransform', { sceneName: nameOfScene, sceneItemId: sourceId })
     console.log(position.sceneItemTransform.positionX)
     if (position.sceneItemTransform.positionX > 100) {
-      await obs.call('SetSceneItemTransform', { sceneName: "Jogo", sceneItemId: 10, sceneItemTransform: { positionX: 50 } })
+      await obs.call('SetSceneItemTransform', { sceneName: nameOfScene, sceneItemId: sourceId, sceneItemTransform: { positionX: 50 } })
       results.innerHTML = JSON.stringify(position, null, 2)
       //position = 50
       return
     }
-    await obs.call('SetSceneItemTransform', { sceneName: "Jogo", sceneItemId: 10, sceneItemTransform: { positionX: 1920 - position.sceneItemTransform.sourceWidth - 30 } })
+    await obs.call('SetSceneItemTransform', { sceneName: nameOfScene, sceneItemId: sourceId, sceneItemTransform: { positionX: 1920 - position.sceneItemTransform.sourceWidth - 30 } })
     results.innerHTML = JSON.stringify(position, null, 2)
     console.log(position)
   }
 
-
-
-  // Tirar screenshot
+  // Take screenshot. In the example below, it is taking a screenshot every 2000 milisseconds (2 seconds)
   async function getScreenshot() {
+    const sceneName = 'Just Chatting'
     results.style.display = 'none'
     screenshotInterval = setInterval(async () => {
-      const getScreenshot = await obs.call('GetSourceScreenshot', { sourceName: "Just Chatting", imageFormat: "jpeg", imageWidth: 640, imageHeight: 400, imageCompressionQuality: 1 })
+      const getScreenshot = await obs.call('GetSourceScreenshot', { sourceName: sceneName, imageFormat: "jpeg", imageWidth: 640, imageHeight: 400, imageCompressionQuality: 1 })
       image.src = getScreenshot.imageData
       //console.log(image)
-    }, 200)
+    }, 2000)
   }
 
-  // Parar screenshot
-  async function pararScreenshot() {
+  // Stop taking screenshot. We got the ID of the setInterval function above to clear it on screenshotInterval variable.
+  async function stopScreenshot() {
     clearInterval(screenshotInterval)
     console.log(screenshotInterval)
     console.log("screenshot paused")
@@ -184,7 +190,8 @@ window.addEventListener('load', () => {
     //})
   }
 
-
+  // Not related to OBS websocket. 
+  // Show a loudspeaker image when button 4 from your mouse is pressed (usually the lateral button from gaming mice).
   document.addEventListener('mousedown', (event) => {
     if (event.button === 4) {
       //console.log(`key=${event.key},code=${event.code}`);
@@ -194,7 +201,8 @@ window.addEventListener('load', () => {
     }
   });
 
-
+  // Not related to OBS websocket
+  // When mouse button 4 is released, hide the loudspeaker image.
   document.addEventListener('mouseup', (event) => {
     if (event.button === 4) {
       //console.log(`key=${event.key},code=${event.code}`);
