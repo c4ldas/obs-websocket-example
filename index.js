@@ -3,6 +3,7 @@ window.addEventListener('load', () => {
 
   const obs = new OBSWebSocket()
 
+  const scanQRCode = document.getElementById('scan-qr-code')
   const obsPort = document.getElementById('obs-port')
   const obsPassword = document.getElementById('obs-password')
   const connect = document.getElementById('submit')
@@ -19,7 +20,8 @@ window.addEventListener('load', () => {
   const screenshot = document.getElementById('screenshot')
   const image = document.getElementById('image')
   const stopScreenshotButton = document.getElementById('stop-screenshot')
-  
+
+  scanQRCode.addEventListener('click', readQRCode)
   connect.addEventListener('click', conectar)
   sceneList.addEventListener('click', getSceneList)
   currentScene.addEventListener('click', getCurrentScene)
@@ -33,13 +35,39 @@ window.addEventListener('load', () => {
   screenshot.addEventListener('click', getScreenshot)
   stopScreenshotButton.addEventListener('click', stopScreenshot)
 
+
+  async function readQRCode() {
+    let htmlscanner = new Html5QrcodeScanner("my-qr-reader", { fps: 10 /*, qrbox: 250 */ });
+    htmlscanner.render(onScanSuccess);
+
+    function onScanSuccess(decodeText, decodeResult) {
+      if (!decodeText.startsWith("obsws://")) {
+        alert("This is not a valid obs-websocket QRCode");
+        console.log(decodeResult)
+        return
+      }
+      console.log(decodeText.split('/')[2].split(':')[1])
+      obsPort.value = decodeText.split('/')[2].split(':')[1];
+      obsPassword.value = decodeText.split('/')[3];
+      conectar()
+      console.log(decodeResult)
+      htmlscanner.clear();
+      const button = document.createElement("button")
+      button.id = "scan-qr-code"
+      const text = "Scan another QR Code"
+      button.textContent = text
+      document.getElementById("my-qr-reader").appendChild(button)
+      document.getElementById("scan-qr-code").addEventListener('click', readQRCode)
+    }
+  }
+
   async function conectar() {
     // Connect to OBS
     await obs.connect(`ws://localhost:${obsPort.value}`, `${obsPassword.value}`)
       .then(async () => {
         const version = await obs.call('GetVersion')
         results.innerHTML = `Connected to OBS ${version.obsVersion} on port ${obsPort.value} using WebSocket version ${version.obsWebSocketVersion}. \nOperational System: ${version.platformDescription}`
-		connect.style.backgroundColor = 'green'
+        connect.style.backgroundColor = 'green'
         console.log(`Connected to OBS on port ${obsPort.value}...`);
 
         console.log(version)
@@ -55,26 +83,26 @@ window.addEventListener('load', () => {
     results.innerHTML = JSON.stringify(getSceneList.scenes, null, 2)
     console.log(`Total scenes amount: ${getSceneList.scenes.length}`)
     console.log('List of scenes:', getSceneList.scenes)
-	
-	  sendToCl1p(getSceneList)
+
+    sendToCl1p(getSceneList)
   }
 
   // Send the output to cl1p, which is like a notepad website, but with an API so you can send text programatically
   // More info: https://cl1p.net/sys/api.jsp
-	async function sendToCl1p(data) {
+  async function sendToCl1p(data) {
     const information = JSON.stringify(data, null, 2)
-        
-    const cl1pFetch = await fetch('https://api.cl1p.net/clipname', { 
-      'method': 'POST', 
+
+    const cl1pFetch = await fetch('https://api.cl1p.net/clipname', {
+      'method': 'POST',
       'mode': 'no-cors',
       'headers': {
         'content-type': 'text/html; charset=UTF-8',
-        'cl1papitoken': 'YOUR_CL1P_API_TOKEN'        
+        'cl1papitoken': 'YOUR_CL1P_API_TOKEN'
       },
       'body': information
     })
-	  console.log(cl1pFetch)
-  }  
+    console.log(cl1pFetch)
+  }
 
   // Get Current Scene
   async function getCurrentScene() {
@@ -106,7 +134,7 @@ window.addEventListener('load', () => {
   // Get Inputs like 'Desktop Audio', 'Mic/Aux' or any other item from Audio Mixer dock
   async function getSpecialInputs() {
     const itemName = 'Mic/Aux'
-    const getInputSettings = await obs.call('GetInputList', {inputName: itemName })
+    const getInputSettings = await obs.call('GetInputList', { inputName: itemName })
     results.innerHTML = JSON.stringify(getInputSettings, null, 2)
     console.log(getInputSettings)
     // const getSpecialInputs = await obs.call('GetSpecialInputs')
