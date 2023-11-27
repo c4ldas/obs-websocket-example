@@ -10,4 +10,4 @@ https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.
 
 # Interface preview
 
-![image](https://github.com/c4ldas/obs-websocket-example/assets/75918726/8a9c6cab-5cde-4ab0-a121-32e669fd69e1)
+![image](https://github.com/c4ldas/obs-websocket-example/assets/75918726/86b1f870-ca34-4e96-9c5e-af1d2404ca4b)
