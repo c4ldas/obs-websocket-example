@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+
+  <title>OBS WebSocket tests</title>
+</head>
+
+<body>
+  <section>
+    <div id="my-qr-reader" class="my-qr-reader"></div>
+
+    <label for="obs-port">OBS Port:</label>
+    <input type="text" id="obs-port" class="text" value="" placeholder="OBS Port" size="10px">
+
+    <label for="obs-password">OBS Password</label>
+    <input type="password" id="obs-password" class="text" value="" placeholder="OBS Websocket password">
+
+    <button id="submit">Connect</button>
+    <button id="scan-qr-code">Connect with QR Code <img src="qr-code-icon.png" height="16px" /></button>
+  </section>
+
+  <section>
+    <button id="scene-list">Scene list</button>
+    <button id="current-scene">Current scene</button>
+    <button id="scene-items">Scene sources</button>
+    <button id="disable-source">Enable/disable source</button>
+    <button id="special-inputs">Get Special Inputs</button>
+    <button id="toggle-mic">Mute/unmute microphone</button>
+    <button id="toggle-desktop-audio">Mute/unmute desktop audio</button>
+    <button id="change-scene">Change scene</button>
+    <button id="transform">Transform</button>
+    <button id="screenshot">Take screenshot</button>
+    <button id="stop-screenshot">Pause screenshot</button>
+  </section>
+
+  <section>
+    <label for="results">
+      <h1 class="textarea-text">Results</h1>
+    </label>
+    <textarea id="results" class="textarea" alt="Placeholder text"></textarea>
+    <img id="image" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+      alt="Placeholder image" />
+  </section>
+
+
+  <script src="script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/obs-websocket-js"></script>
+  <script src="https://unpkg.com/html5-qrcode" defer></script>
+</body>
+
+</html>
