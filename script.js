@@ -1,4 +1,3 @@
-
 window.addEventListener('load', () => {
 
   const obs = new OBSWebSocket()
