@@ -13,7 +13,7 @@ https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.
 
 You can check the page live from the link below: 
 
-https://obs-websocket-example.c4ldas.repl.co/
+https://obs-websocket-example.replit.app/
 
 # Interface preview
 
