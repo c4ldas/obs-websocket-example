@@ -41,6 +41,7 @@ window.addEventListener('load', () => {
     htmlscanner.render(onScanSuccess);
 
     function onScanSuccess(decodeText, decodeResult) {
+      console.log(decodeResult)
       if (!decodeText.startsWith("obsws://")) {
         alert("This is not a valid obs-websocket QRCode");
         console.log(decodeResult)
