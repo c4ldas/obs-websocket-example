@@ -21,7 +21,7 @@ window.addEventListener('load', () => {
   const stopScreenshotButton = document.getElementById('stop-screenshot')
 
   scanQRCode.addEventListener('click', readQRCode)
-  connect.addEventListener('click', conectar)
+  connect.addEventListener('click', connectToOBS);
   sceneList.addEventListener('click', getSceneList)
   currentScene.addEventListener('click', getCurrentScene)
   sceneItems.addEventListener('click', getSceneItems)
@@ -34,7 +34,20 @@ window.addEventListener('load', () => {
   screenshot.addEventListener('click', getScreenshot)
   stopScreenshotButton.addEventListener('click', stopScreenshot)
 
-
+  // Checks for OBS WebSocket disconnection.
+  obs.on("ConnectionClosed", (data) => {  
+    connect.innerText = "Disconnected!";
+    connect.style.backgroundColor = "#f28b82";
+    results.innerHTML = `Disconnected from OBS WebSocket`;
+    console.log(`Disconnected from OBS WebSocket`)
+    
+    setTimeout (() => {
+      connect.innerText = "Connect";
+      connect.style.backgroundColor = "#83b8e7";
+      results.innerHTML = "";
+    }, 2500);
+  })
+  
   // Read qr code. Using Html5QrcodeScanner library
   async function readQRCode() {
     let htmlscanner = new Html5QrcodeScanner("my-qr-reader", { fps: 10 /*, qrbox: 250 */ });
@@ -57,20 +70,32 @@ window.addEventListener('load', () => {
     }
   }
 
-  async function conectar() {
-    // Connect to OBS
-    await obs.connect(`ws://localhost:${obsPort.value}`, `${obsPassword.value}`)
-      .then(async () => {
-        const version = await obs.call('GetVersion')
-        results.innerHTML = `Connected to OBS ${version.obsVersion} on port ${obsPort.value} using WebSocket version ${version.obsWebSocketVersion}. \nOperational System: ${version.platformDescription}`
-        connect.style.backgroundColor = 'green'
-        console.log(`Connected to OBS on port ${obsPort.value}...`);
+  async function connectToOBS() {
+    try {
+      
+      // If connected and pressed the button again, disconnects from OBS WebSocket
+      if(obs.socket) return obs.disconnect();
 
-        console.log(version)
-      }).catch((error) => {
-        results.innerHTML = `Error connecting to OBS: ${error}`
-        console.log(`Error connecting to OBS: ${error}`);
-      })
+      // Connect to OBS WebSocket
+      const connection = await obs.connect(`ws://localhost:${obsPort.value}`, `${obsPassword.value}`);
+      const obsInfo = await obs.call('GetVersion');
+      const availableRequests = obsInfo.availableRequests.toString();
+      results.innerHTML = `
+      Connected to OBS ${obsInfo.obsVersion} on port ${obsPort.value} using WebSocket version ${obsInfo.obsWebSocketVersion}.
+      Operational System: ${obsInfo.platformDescription}
+      
+      Available requests: \n\t${availableRequests.replaceAll(',','\n\t')}
+      `
+      connect.style.backgroundColor = "#66d18f";
+      connect.innerText = "Connected!";
+      console.log("Connected to OBS WebSocket");
+      console.log(obsInfo);
+      
+    } catch (error) {
+      results.innerHTML = `Error connecting to OBS: ${error}`;
+      console.log(`Error connecting to OBS: ${error}`);
+    }
+      
   }
 
   // Get Scene list and send the output to cl1p.net
